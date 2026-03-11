@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tus notas</title>
+
+<style>
+
+body{
+font-family: Arial;
+padding:30px;
+
+background: linear-gradient(
+to bottom,
+white,
+#d9d9d9,
+#8c8c8c,
+#404040,
+black
+);
+
+min-height:100vh;
+}
+
+h1{
+text-align:center;
+}
+
+.container{
+max-width:450px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:10px;
+text-align:center;
+}
+
+button{
+padding:8px 15px;
+margin:5px;
+cursor:pointer;
+}
+
+input{
+padding:5px;
+margin:5px;
+}
+
+.perfil{
+border:1px solid #ddd;
+padding:15px;
+border-radius:8px;
+text-align:left;
+width:220px;
+background:white;
+
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+transition:0.2s;
+}
+
+.perfil:hover{
+transform:scale(1.03);
+}
+
+
+
+#perfiles{
+display:flex;
+flex-wrap:wrap;
+gap:15px;
+justify-content:center;
+margin-top:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Calcula tu promedio</h1>
+
+<div class="container">
+
+<h3>Crear perfil</h3>
+
+<input id="nombrePerfil" placeholder="Ej: Matemáticas">
+<button onclick="crearPerfil()">Crear</button>
+
+</div>
+
+<div id="perfiles"></div>
+
+<script>
+
+let perfiles = JSON.parse(localStorage.getItem("perfiles")) || []
+
+function guardarDatos(){
+localStorage.setItem("perfiles", JSON.stringify(perfiles))
+}
+
+function crearPerfil(){
+
+let nombre = document.getElementById("nombrePerfil").value
+
+if(nombre === ""){
+alert("Ingresa un nombre")
+return
+}
+
+perfiles.push({
+nombre:nombre,
+notas:[]
+})
+
+guardarDatos()
+mostrarPerfiles()
+
+document.getElementById("nombrePerfil").value=""
+
+}
+
+function eliminarPerfil(index){
+
+if(confirm("¿Seguro que quieres eliminar este perfil?")){
+
+perfiles.splice(index,1)
+
+guardarDatos()
+
+mostrarPerfiles()
+
+}
+
+}
+
+
+
+function formatearNota(nota){
+
+nota = nota.toString().trim()
+
+if(nota.includes(".")){
+return nota
+}
+
+if(nota.length === 1){
+return nota + ".0"
+}
+
+let parteEntera = nota.slice(0,-1)
+let decimal = nota.slice(-1)
+
+return parteEntera + "." + decimal
+
+}
+
+function agregarNota(index){
+
+let notaInput = document.getElementById("nota"+index).value
+let porcentajeInput = document.getElementById("porcentaje"+index).value
+
+let nota = formatearNota(notaInput)
+let porcentaje = parseFloat(porcentajeInput)
+
+if(isNaN(parseFloat(nota)) || isNaN(porcentaje)){
+alert("Datos inválidos")
+return
+}
+
+perfiles[index].notas.push({
+nota:nota,
+porcentaje:porcentaje
+})
+
+guardarDatos()
+mostrarPerfiles()
+
+}
+
+
+
+function calcularPromedio(notas){
+
+let total=0
+
+notas.forEach(n=>{
+total += parseFloat(n.nota) * (n.porcentaje/100)
+})
+
+return total.toFixed(2)
+
+}
+
+
+function mostrarPerfiles(){
+
+let contenedor = document.getElementById("perfiles")
+contenedor.innerHTML=""
+
+perfiles.forEach((perfil,index)=>{
+
+let promedio = calcularPromedio(perfil.notas)
+
+let html = `
+<div class="perfil">
+
+<h3>${perfil.nombre}</h3>
+
+<input id="nota${index}" placeholder="Nota">
+<input id="porcentaje${index}" placeholder="%">
+
+<button onclick="agregarNota(${index})">Agregar</button>
+<button onclick="eliminarPerfil(${index})">Eliminar</button>
+
+<h4>Promedio: ${promedio}</h4>
+
+<ul>
+`
+
+perfil.notas.forEach(n=>{
+html += `<li>Nota ${n.nota} (${n.porcentaje}%)</li>`
+})
+
+html += `</ul></div>`
+
+contenedor.innerHTML += html
+
+})
+
+}
+
+mostrarPerfiles()
+
+</script>
+
+</body>
+</html>
